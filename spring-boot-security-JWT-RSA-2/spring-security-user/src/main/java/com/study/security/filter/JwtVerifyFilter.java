@@ -1,7 +1,9 @@
 package com.study.security.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.study.security.authentication.ApiAuthenticationToken;
 import com.study.security.config.JwtProperties;
+import com.study.security.dao.UserDao;
 import com.study.security.entity.PayLoad;
 import com.study.security.entity.SysPermission;
 import com.study.security.entity.SysRole;
@@ -12,6 +14,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.AuthorizationServiceException;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -26,8 +29,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author HLH
@@ -40,6 +45,8 @@ public class JwtVerifyFilter extends OncePerRequestFilter {
     private JwtProperties jwtProperties;
     @Setter
     private ObjectMapper objectMapper;
+    @Setter
+    private UserDao userDao;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -47,8 +54,9 @@ public class JwtVerifyFilter extends OncePerRequestFilter {
             String token = CookieUtils.getCookieValue(request, jwtProperties.getCookieName(), "UTF-8");
             PayLoad payLoad = JwtUtils.getInfoFromToken(token, jwtProperties.getPublicKey());
             SysUser user = payLoad.getData();
+            user = userDao.findById(user.getId()).orElseThrow(() ->new AuthenticationServiceException("认证失败"));
             Set<SysPermission> authorities = user.getRoleSet().stream().map(SysRole::getPermissionSet).flatMap(Collection::stream).collect(Collectors.toSet());
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user, null, authorities);
+            ApiAuthenticationToken authentication = ApiAuthenticationToken.builder().user(user).token(token).authorities(authorities).build();
             SecurityContextHolder.getContext().setAuthentication(authentication);
             filterChain.doFilter(request, response);
         } catch (AuthenticationException | AccessDeniedException e){

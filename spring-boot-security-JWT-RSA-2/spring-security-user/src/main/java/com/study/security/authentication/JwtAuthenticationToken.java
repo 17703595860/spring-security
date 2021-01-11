@@ -1,40 +1,28 @@
 package com.study.security.authentication;
 
-import com.study.security.entity.SysUser;
 import lombok.Builder;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 
-import javax.security.auth.Subject;
 import java.util.Collection;
 
 /**
  * @author HLH
  * @email 17703595860@163.com
- * @date : Created in  2021/1/5 16:53
+ * @date : Created in  2021/1/11 15:33
  */
-@Getter
-@Setter
+@Data
 @Builder
-public class ApiAuthenticationToken implements Authentication {
-
-    private static final long serialVersionUID = 2099911009172429863L;
-
-    private SysUser user;
+public class JwtAuthenticationToken implements Authentication {
 
     private String token;
 
-    private Collection<? extends GrantedAuthority> authorities;
-
-    private Object details;
-
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return this.authorities;
+        return null;
     }
 
     @Override
@@ -44,28 +32,26 @@ public class ApiAuthenticationToken implements Authentication {
 
     @Override
     public Object getDetails() {
-        return this.details;
+        return null;
     }
 
     @Override
     public Object getPrincipal() {
-        return this.user;
+        return token;
     }
 
     @Override
     public boolean isAuthenticated() {
-        return true;
+        return false;
     }
 
     @Override
     public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {
-        if (!isAuthenticated) {
-            throw new IllegalArgumentException("Cannot set this token unauthenticated");
-        }
+
     }
 
     @Override
     public String getName() {
-        return user.getUsername();
+        return null;
     }
 }

@@ -1,6 +1,7 @@
 package com.study.security.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.study.security.authentication.ApiAuthenticationToken;
 import com.study.security.config.JwtProperties;
 import com.study.security.entity.PayLoad;
 import com.study.security.entity.SysUser;
@@ -33,7 +34,7 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-        SysUser user = (SysUser) authentication.getPrincipal();
+        SysUser user = ((ApiAuthenticationToken) authentication).getUser();
         user.setPassword(null);
         PayLoad payLoad = new PayLoad(user, jwtProperties.getExpire());
         String token = null;

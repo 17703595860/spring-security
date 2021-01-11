@@ -1,9 +1,11 @@
 package com.study.security.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.study.security.dao.UserDao;
 import com.study.security.filter.JwtLoginFilter;
 import com.study.security.filter.JwtVerifyFilter;
 import com.study.security.handler.*;
+import com.study.security.provider.ApiAuthenticationProvider;
 import com.study.security.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -36,6 +38,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private ObjectMapper objectMapper;
     @Autowired
     private UserService userService;
+    @Autowired
+    private UserDao userDao;
 
     public JwtLoginFilter getJwtLoginFilter() throws Exception {
         JwtLoginFilter jwtLoginFilter = new JwtLoginFilter();
@@ -54,6 +58,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         JwtVerifyFilter jwtVerifyFilter = new JwtVerifyFilter();
         jwtVerifyFilter.setJwtProperties(jwtProperties);
         jwtVerifyFilter.setObjectMapper(objectMapper);
+        jwtVerifyFilter.setUserDao(userDao);
         return jwtVerifyFilter;
     }
 
@@ -89,9 +94,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return jwtAccessDeniedHandler;
     }
 
+    public ApiAuthenticationProvider apiAuthenticationProvider() {
+        ApiAuthenticationProvider apiAuthenticationProvider = new ApiAuthenticationProvider();
+        apiAuthenticationProvider.setUserDetailsService(userService);
+        apiAuthenticationProvider.setPasswordEncoder(passwordEncoder);
+        return apiAuthenticationProvider;
+    }
+
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(userService).passwordEncoder(passwordEncoder);
+        auth.authenticationProvider(apiAuthenticationProvider());
     }
 
     @Override
