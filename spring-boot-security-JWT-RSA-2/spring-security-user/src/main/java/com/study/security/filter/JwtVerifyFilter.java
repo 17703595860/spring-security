@@ -2,6 +2,7 @@ package com.study.security.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.study.security.authentication.ApiAuthenticationToken;
+import com.study.security.authentication.JwtAuthenticationToken;
 import com.study.security.config.JwtProperties;
 import com.study.security.dao.UserDao;
 import com.study.security.entity.PayLoad;
@@ -14,6 +15,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.AuthorizationServiceException;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -47,17 +49,16 @@ public class JwtVerifyFilter extends OncePerRequestFilter {
     private ObjectMapper objectMapper;
     @Setter
     private UserDao userDao;
+    @Setter
+    private AuthenticationManager authenticationManager;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
             String token = CookieUtils.getCookieValue(request, jwtProperties.getCookieName(), "UTF-8");
-            PayLoad payLoad = JwtUtils.getInfoFromToken(token, jwtProperties.getPublicKey());
-            SysUser user = payLoad.getData();
-            user = userDao.findById(user.getId()).orElseThrow(() ->new AuthenticationServiceException("认证失败"));
-            Set<SysPermission> authorities = user.getRoleSet().stream().map(SysRole::getPermissionSet).flatMap(Collection::stream).collect(Collectors.toSet());
-            ApiAuthenticationToken authentication = ApiAuthenticationToken.builder().user(user).token(token).authorities(authorities).build();
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            JwtAuthenticationToken jwtAuthenticationToken = JwtAuthenticationToken.builder().token(token).build();
+            Authentication authenticate = authenticationManager.authenticate(jwtAuthenticationToken);
+            SecurityContextHolder.getContext().setAuthentication(authenticate);
             filterChain.doFilter(request, response);
         } catch (AuthenticationException | AccessDeniedException e){
             throw e;

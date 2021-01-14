@@ -6,6 +6,7 @@ import com.study.security.filter.JwtLoginFilter;
 import com.study.security.filter.JwtVerifyFilter;
 import com.study.security.handler.*;
 import com.study.security.provider.ApiAuthenticationProvider;
+import com.study.security.provider.JwtAuthenticationProvider;
 import com.study.security.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -54,11 +55,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return jwtLoginFilter;
     }
 
-    public JwtVerifyFilter getJwtVerifyFilter() {
+    public JwtVerifyFilter getJwtVerifyFilter() throws Exception {
         JwtVerifyFilter jwtVerifyFilter = new JwtVerifyFilter();
         jwtVerifyFilter.setJwtProperties(jwtProperties);
         jwtVerifyFilter.setObjectMapper(objectMapper);
         jwtVerifyFilter.setUserDao(userDao);
+        jwtVerifyFilter.setAuthenticationManager(this.authenticationManager());
         return jwtVerifyFilter;
     }
 
@@ -101,10 +103,18 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return apiAuthenticationProvider;
     }
 
+    public JwtAuthenticationProvider jwtAuthenticationProvider() {
+        JwtAuthenticationProvider jwtAuthenticationProvider = new JwtAuthenticationProvider();
+        jwtAuthenticationProvider.setJwtProperties(jwtProperties);
+        jwtAuthenticationProvider.setUserDao(userDao);
+        return jwtAuthenticationProvider;
+    }
+
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(userService).passwordEncoder(passwordEncoder);
         auth.authenticationProvider(apiAuthenticationProvider());
+        auth.authenticationProvider(jwtAuthenticationProvider());
     }
 
     @Override
