@@ -28,7 +28,6 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
  * @date : Created in  2020/12/31 13:29
  */
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired

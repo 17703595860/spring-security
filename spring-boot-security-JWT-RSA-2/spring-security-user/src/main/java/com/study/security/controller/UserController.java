@@ -1,5 +1,6 @@
 package com.study.security.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,7 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/user")
 public class UserController {
 
+    /**
+     * 在这可以使用扩展的hasPermission，hasAnyPermission，hasAndPermission
+     */
     @GetMapping
+    @PreAuthorize("hasAnyPermission('user', 'admin')")
     public String findAll() {
         return "Success";
     }
